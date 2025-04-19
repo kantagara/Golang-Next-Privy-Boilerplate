@@ -7,7 +7,7 @@ import (
 )
 
 type Handler struct {
-	Service Service
+	Service AuthService
 }
 
 type AuthResponse struct {

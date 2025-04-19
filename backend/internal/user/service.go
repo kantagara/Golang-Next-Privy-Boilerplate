@@ -1,6 +1,6 @@
 ﻿package user
 
-type Service interface {
+type UserService interface {
 	GetUser(id string) (User, error)
 	DeleteUser(id string) error
 	AddUser(user User) (User, error)
@@ -10,7 +10,7 @@ type serviceImpl struct {
 	repository Repository
 }
 
-func NewService(repository Repository) Service {
+func NewService(repository Repository) UserService {
 	return &serviceImpl{repository: repository}
 }
 

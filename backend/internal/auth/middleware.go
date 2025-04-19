@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-func AuthMiddleware(service Service) gin.HandlerFunc {
+func AuthMiddleware(service AuthService) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		token := ctx.GetHeader("Authorization")
 		if token == "" {

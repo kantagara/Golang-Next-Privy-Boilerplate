@@ -1,5 +1,5 @@
 ﻿package user
 
 type Handler struct {
-	UserService Service
+	UserService UserService
 }

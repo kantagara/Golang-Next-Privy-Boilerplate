@@ -15,13 +15,13 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-type Service interface {
+type AuthService interface {
 	VerifyIdentityToken(token string) (*PrivyClaims, error)
 
 	Authorize(ctx *gin.Context) (*user.User, int, error)
 }
 
-func NewService(repo user.Repository) Service {
+func NewService(repo user.Repository) AuthService {
 	return &authService{
 		repo: repo,
 	}
