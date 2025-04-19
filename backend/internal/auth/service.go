@@ -1,14 +1,13 @@
 ﻿package auth
 
 import (
-	"backend/internal/common/utils"
 	"backend/internal/user"
-	"context"
 	"crypto/ecdsa"
 	"crypto/x509"
 	"encoding/pem"
 	"errors"
 	"fmt"
+	"github.com/gin-gonic/gin"
 	"net/http"
 	"os"
 	"strings"
@@ -17,10 +16,9 @@ import (
 )
 
 type Service interface {
-	VerifyUser(token string) (*PrivyClaims, error)
 	VerifyIdentityToken(token string) (*PrivyClaims, error)
 
-	Authorize(ctx context.Context, token string) (*user.User, int, error)
+	Authorize(ctx *gin.Context) (*user.User, int, error)
 }
 
 func NewService(repo user.Repository) Service {
@@ -33,12 +31,16 @@ type authService struct {
 	repo user.Repository
 }
 
-func (a *authService) Authorize(ctx context.Context, token string) (*user.User, int, error) {
+func (a *authService) Authorize(ctx *gin.Context) (*user.User, int, error) {
 
-	claims, err := a.VerifyIdentityToken(token)
+	claimsValue, exists := ctx.Get("claims")
+	if !exists {
+		return nil, -1, errors.New("missing claims")
+	}
 
-	if err != nil {
-		return nil, http.StatusUnauthorized, err
+	claims, ok := claimsValue.(*PrivyClaims)
+	if !ok {
+		return nil, -1, errors.New("claims type assertion failed")
 	}
 
 	foundUser, err := a.repo.GetUserById(ctx, claims.UserId)
@@ -115,23 +117,4 @@ func keyFunc(token *jwt.Token) (interface{}, error) {
 		return nil, fmt.Errorf("failed to parse public key: %w", err)
 	}
 	return pubKey, nil
-}
-
-func (a *authService) VerifyUser(rawToken string) (*PrivyClaims, error) {
-	rawToken = utils.ParseToken(rawToken)
-	token, err := jwt.ParseWithClaims(rawToken, &PrivyClaims{}, keyFunc)
-	if err != nil {
-		return nil, fmt.Errorf("invalid JWT signature: %w", err)
-	}
-
-	claims, ok := token.Claims.(*PrivyClaims)
-	if !ok {
-		return nil, errors.New("JWT does not contain PrivyClaims")
-	}
-
-	if err := claims.Valid(); err != nil {
-		return nil, fmt.Errorf("invalid JWT claims: %w", err)
-	}
-
-	return claims, nil
 }
